@@ -3,6 +3,9 @@ from nltk.chat.util import Chat, reflections
 import os
 import json
 
+nltk.download(
+    'punkt')  # "Punkt" is a module in the Natural Language Toolkit (NLTK) library that provides a pre-trained sentence tokenizer. It is used to segment raw text into sentences based on punctuation marks such as periods, commas, and question marks. This tokenizer is particularly useful when working with natural language processing tasks such as machine translation, sentiment analysis, and information retrieval.
+
 # Define CouCou's responses
 responses = {
     "What's your name?": "My name is CouCou.",
@@ -20,19 +23,25 @@ if os.path.isfile(data_file):
 else:
     coucou_data = {}
 
+
 # Define CouCou's learning function
 def learn(input, response):
     tokens = nltk.word_tokenize(input)
     for token in tokens:
-        if token.isalpha():
-            coucou_data[token.lower()] = response.lower()
-            with open(data_file, 'w') as f:
-                json.dump(coucou_data, f)
+        if token.isalpha(): 
+            if token.lower() == 'name':  # Check if the input contains the word "name"
+                # Retrieve the user's name from the input
+                user_name = ' '.join(tokens[tokens.index(token)+1:])
+                coucou_data[user_name.lower()] = response.lower()  # Store the user's name and CouCou's response in the coucou_data dictionary
+                with open(data_file, 'w') as f:
+                    json.dump(coucou_data, f)
+                return user_name  # Return the user's name so that it can be used in the response
+    return None
+
 
 # Define CouCou's chat function
 def coucou_chat():
     # Initialize chatbot
-    responses = nltk.chat.util.reflections
     pairs = [
         (r'hello|hi|hey', ['Hello!', 'Hi there!', 'Hey!']),
         (r'how are you?', ['I am fine, thank you.', 'I am doing well.']),
@@ -40,7 +49,7 @@ def coucou_chat():
         (r'what is your name\?', ['My name is CouCou!']),
         (r'bye|goodbye', ['Goodbye!', 'Bye!', 'Take care!'])
     ]
-    chat = nltk.chat.util.Chat(pairs, reflections)
+    chat = Chat(pairs, reflections)
 
     # Start conversation loop
     print("Hello! I'm CouCou.")
@@ -56,9 +65,18 @@ def coucou_chat():
         # Get CouCou's response
         coucou_response = chat.respond(user_input)
 
+        # If CouCou doesn't know how to respond, prompt the user for a response and learn from it
+        if coucou_response == None:
+            new_response = input("CouCou: I'm sorry, I don't know how to respond. What should I say? ")
+            learn(user_input, new_response)
+            print("CouCou: Thank you, I'll remember that.")
+
         # Print CouCou's response
-        print("CouCou:", coucou_response)
+        else:
+            print("CouCou:", coucou_response)
 
 
 if __name__ == "__main__":
     coucou_chat()
+
+# Mersal Developments.
